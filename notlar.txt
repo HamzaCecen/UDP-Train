@@ -1,0 +1,84 @@
+Servera Bağlanıldı: 192.0.0.0
+Serverdan gelen mesaj: Serverdan Merhaba
+------------Clientten Gönderilen Mesaj------------
+messageID: b''x0x11'
+messageInterface:b'3'
+messagePortNum: 32
+messageByteCount: 9
+dataBytes: b'1.Mesaj' 
+--------------------------------------------------
+------------Serverden Gelen Mesaj------------
+messageID: b'1'
+messageInterface: b'3'
+messagePortNum: 32
+messageByteCount: 9
+
+Servera Bağlanıldı: 192.0.0.0
+Serverdan gelen mesaj: Serverdan Merhaba
+------------Clientten Gönderilen Mesaj------------
+messageID: b''x0x11'
+messageInterface:b'3'
+messagePortNum: 32
+messageByteCount: 9
+dataBytes: b'1.Mesaj' 
+--------------------------------------------------
+------------Serverden Gelen Mesaj------------
+messageID: b'1'
+messageInterface: b'3'
+messagePortNum: 32
+messageByteCount: 9
+------------Clientten Gönderilen Mesaj------------
+messageID: b''x0x11'
+messageInterface:b'5'
+messagePortNum: 32
+messageByteCount: 9
+dataBytes: b'1.Mesaj' 
+--------------------------------------------------
+------------Serverden Gelen Mesaj------------
+messageID: b'1'
+messageInterface: b'5'
+messagePortNum: 32
+messageByteCount: 9
+
+Servera Bağlanıldı: 192.0.0.0
+Serverdan gelen mesaj: Serverdan Merhaba
+------------Clientten Gönderilen Mesaj------------
+messageID: b''x0x11'
+messageInterface:b'2'
+messagePortNum: 21
+messageByteCount: 9
+dataBytes: b'1.Mesaj' 
+--------------------------------------------------
+------------Serverden Gelen Mesaj------------
+messageID: b'1'
+messageInterface: b'2'
+messagePortNum: 21
+messageByteCount: 9
+
+Servera Bağlanıldı: 192.0.0.0
+Serverdan gelen mesaj: Serverdan Merhaba
+------------Clientten Gönderilen Mesaj------------
+messageID: b''x0x11'
+messageInterface:b'3'
+messagePortNum: 2
+messageByteCount: 9
+dataBytes: b'1.Mesaj' 
+--------------------------------------------------
+------------Serverden Gelen Mesaj------------
+messageID: b'1'
+messageInterface: b'3'
+messagePortNum: 2
+messageByteCount: 9
+------------Clientten Gönderilen Mesaj------------
+messageID: b''x0x11'
+messageInterface:b'1'
+messagePortNum: 2
+messageByteCount: 9
+dataBytes: b'1.Mesaj' 
+--------------------------------------------------
+------------Serverden Gelen Mesaj------------
+messageID: b'1'
+messageInterface: b'1'
+messagePortNum: 2
+messageByteCount: 9
+
