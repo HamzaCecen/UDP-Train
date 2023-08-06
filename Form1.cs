@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -25,6 +25,10 @@ namespace UDPClient
     }
     public partial class Form1 : Form
     {
+        private bool isConnected = false;
+
+
+
         public TextBox TxtMessageHistory => txtMessageHistory;
         //starting as client for UDP
         UdpClient udpClient;
@@ -32,7 +36,7 @@ namespace UDPClient
 
         //bağlamaya çalışıyoryum
         static Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        public const int PORT = 5000;
+        public int PORT;
 
         private UDPServer udpServer;
         private Task _;
@@ -42,9 +46,9 @@ namespace UDPClient
             InitializeComponent();
 
             udpServer = new UDPServer(this);
-            // Subscribe to the MessageReceived event
-            //udpServer.MessageReceived += UdpServer_MessageReceived;
         }
+
+        
         private void UdpServer_MessageReceived(string message)
         {
             // Update the UI in a thread-safe manner
@@ -54,6 +58,7 @@ namespace UDPClient
                 AppendMessageToHistory(message);
             }));
         }
+        
         private void AppendMessageToHistory(string message)
         {
             MessageHeader mh = new MessageHeader
@@ -102,12 +107,14 @@ namespace UDPClient
         private void txtMessageHistory_TextChanged(object sender, EventArgs e)
         {
             string firstMessage = txtMessageHistory.Text;
-            firstMessage = $"Serverden Mesaj";
+            firstMessage = $"A Message from Server: Hello";
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
+
             string ipAdressText = txtIP.Text;
+
             
             try
             {
@@ -116,12 +123,23 @@ namespace UDPClient
                 txtMessageHistory.Text += $"Serverdan gelen mesaj: Serverdan Merhaba{Environment.NewLine}";
                 txtColor.BackColor = Color.Green;
                 btnUpdate.Enabled = true;
+
+                
             }
             catch (Exception ex)
             {
 
-                txtMessageHistory.Text = $"Error" +ex.Message;
+                txtMessageHistory.Text = $"Error {Environment.NewLine}" +ex.Message;
                 txtColor.BackColor = Color.Red;
+
+                if (!isConnected)
+                {
+                    txtMessageHistory.Text += $"{Environment.NewLine}Try Again {Environment.NewLine}";
+                    txtMessageHistory.Text += $"-----------------------------------------------------------";
+                }
+
+
+
 
             }
         }
@@ -194,16 +212,6 @@ namespace UDPClient
                     txtMessageHistory.Text += $"messageByteCount: {mh.MessageByteCount}{Environment.NewLine}";
                     txtMessageHistory.Text += $"dataBytes: b'1.Mesaj' {Environment.NewLine}";
                     txtMessageHistory.Text += $"--------------------------------------------------{Environment.NewLine}";
-
-                    /*
-                    txtMessageHistory.Text += $"------------Serverden Gelen Mesaj------------{Environment.NewLine}";
-                    txtMessageHistory.Text += $"messageID: b'\xc{mh.MessageID}'{Environment.NewLine}";
-                    txtMessageHistory.Text += $"messageInterface: b'\xe{delay}'{Environment.NewLine}";
-                    txtMessageHistory.Text += $"messagePortNum: {txtPort.Text}{Environment.NewLine}";
-                    txtMessageHistory.Text += $"messageByteCount: {mh.MessageByteCount}{Environment.NewLine}";
-                    */
-
-
                 }
 
             }
@@ -240,42 +248,5 @@ namespace UDPClient
             }
         }
     }
-
-    /*
-    /// <summary>
-    /// //////////////////////////////////////////////////////////////////////////////
-    /// </summary>
-    class UDPServer
-    {
-        private UdpClient udpServer;
-        private IPEndPoint clientEndPoint;
-
-        public UDPServer()
-        {
-            udpServer = new UdpClient(5000); // Listening on port 5000.
-        }
-
-        public void StartListening()
-        {
-            try
-            {
-                while (true)
-                {
-                    byte[] data = udpServer.Receive(ref clientEndPoint);
-                    string message = Encoding.UTF8.GetString(data);
-                    // Handle the received message here, you can update the Form1 UI or process the message further.
-
-                    
-
-                }
-            }
-            catch (Exception ex)
-            {
-
-                // Handle any exceptions here, e.g., log the error.
-            }
-        }
-    }
-    */
 }
 
