@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -12,26 +12,22 @@ namespace TrainUDP
     class UDPServer
     {
         private IPEndPoint clientEndPoint;
-
-        // ... (existing code)
-
         // Reference to the Form1 instance (you need to set this when creating the UDPServer)
         private Form1 form;
         private UdpClient udpServer;
 
 
-        public delegate void MessageReceivedEventHandler(string message);
-
-        public event EventHandler<string> MessageReceived;
+        public delegate void MessageReceivedEventHandler(object sender, string message);
+        
         // Define the event using the delegate
-        //public event MessageReceivedEventHandler MessageReceived;
+        public event MessageReceivedEventHandler MessageReceived;
 
 
 
         public UDPServer(Form1 form)
         {
             this.form = form;
-            udpServer = new UdpClient(5000); // Listening on port 5000.
+            udpServer = new UdpClient(5000); // 
         }
 
         public void StartListening()
@@ -43,43 +39,69 @@ namespace TrainUDP
                     byte[] data = udpServer.Receive(ref clientEndPoint);
                     string message = Encoding.UTF8.GetString(data);
 
-                    OnMessageReceived(message);
+                    //OnMessageReceived(message);
 
-                    form.Invoke(new Action(() =>
+
+                    if (form.CmbAnswer.SelectedItem.ToString() == "0x11")
                     {
-                        form.TxtMessageHistory.Text = $"Hello {Environment.NewLine}";
-                    }));
-                    /*
-                    // Update the UI in a thread-safe manner
-                    form.Invoke(new Action(() =>
-                    {
-                        form.TxtMessageHistory.AppendText("Received: " + message + Environment.NewLine);
-                        //AppendMessageToHistory();
-
-                    }));
-
-                    // ... (existing code)
-                    */
+                        form.Invoke(new Action(() =>
+                        {
+                            AppendMessageToHistory();
+                        }));
+                    }
                 }
             }
             catch (Exception ex)
             {
-                // ... (existing code)
+                
             }
         }
 
+        public void AppendMessageToHistory()
+        {
+            string answer = form.CmbAnswer.SelectedItem.ToString();
+            MessageHeader mh = new MessageHeader
+            {
+                MessageID = 0x01,   
+                MessageInterface = 0x02,
+                PortNumber = 0x03,
+                MessageByteCount = (ushort)(5 + Encoding.UTF8.GetByteCount(answer))
+            };
+
+            ////////////////
+            byte[] headerBytes = new byte[5];
+            headerBytes[0] = mh.MessageID;
+            headerBytes[1] = mh.MessageInterface;
+            headerBytes[2] = mh.PortNumber;
+            headerBytes[3] = (byte)(mh.MessageByteCount & 0xFF);
+            headerBytes[4] = (byte)((mh.MessageByteCount >> 8) & 0xFF);
+
+            // convert message to BYTEs
+            byte[] bodyBytes = Encoding.UTF8.GetBytes(answer);
+
+            byte[] fullMessage = new byte[headerBytes.Length + bodyBytes.Length];
+            Buffer.BlockCopy(headerBytes, 0, fullMessage, 0, headerBytes.Length);
+            Buffer.BlockCopy(bodyBytes, 0, fullMessage, headerBytes.Length, bodyBytes.Length);
+
+
+
+
+            form.TxtMessageHistory.AppendText("------------Message From Server------------" + Environment.NewLine);
+            form.TxtMessageHistory.AppendText("messageId: "+ mh.MessageID + Environment.NewLine);
+            form.TxtMessageHistory.AppendText("messageInterface: " + mh.MessageInterface + Environment.NewLine);
+            form.TxtMessageHistory.AppendText("messagePortNum: " + form.TxtPortNum.Text + Environment.NewLine);
+            form.TxtMessageHistory.AppendText("messageCount: " + mh.MessageByteCount + Environment.NewLine);
+            form.TxtMessageHistory.AppendText("-------------------------------------------" + Environment.NewLine);
+
+
+        }
+
+        /*
         protected virtual void OnMessageReceived(string message)
         {
-            /*
-            // Check if there are any subscribers to the event
-            if (MessageReceived != null)
-            {
-                // Invoke the event with the received message
-                MessageReceived(message);
-            }
-            */
             MessageReceived?.Invoke(this, message);
         }
+        */
 
 
         
