@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.IO;
 using TrainUDP;
+using System.Threading;
 
 namespace UDPClient
 {
@@ -23,13 +24,23 @@ namespace UDPClient
         public byte PortNumber;
         public ushort MessageByteCount;
     }
+
+    //For Excel structure
+    struct IpPortData
+    {
+        public string IpAddress;
+        public int Port;
+    }
+
     public partial class Form1 : Form
     {
         private bool isConnected = false;
-
-
-
         public TextBox TxtMessageHistory => txtMessageHistory;
+        public ComboBox CmbAnswer => cmbAnswer;
+        public TextBox TxtPortNum => txtPort;
+
+        private List<IpPortData> ipPortList = new List<IpPortData>();
+
         //starting as client for UDP
         UdpClient udpClient;
         IPEndPoint ep;
@@ -39,7 +50,6 @@ namespace UDPClient
         public int PORT;
 
         private UDPServer udpServer;
-        private Task _;
 
         public Form1()
         {
@@ -47,50 +57,11 @@ namespace UDPClient
 
             udpServer = new UDPServer(this);
         }
-
-        
-        private void UdpServer_MessageReceived(string message)
-        {
-            // Update the UI in a thread-safe manner
-            TxtMessageHistory.Invoke(new Action(() =>
-            {
-                TxtMessageHistory.AppendText("Received: " + message + Environment.NewLine);
-                AppendMessageToHistory(message);
-            }));
-        }
-        
-        private void AppendMessageToHistory(string message)
-        {
-            MessageHeader mh = new MessageHeader
-            {
-                MessageID = 0x01,
-                MessageInterface = 0x02,
-                PortNumber = 0x03,
-                MessageByteCount = (ushort)(5 + Encoding.UTF8.GetByteCount(message))
-            };
-            TxtMessageHistory.AppendText("------------Serverden Gelen Mesaj------------" + Environment.NewLine);
-            TxtMessageHistory.AppendText("messageID: b'\xc" + mh.MessageID + "'" + Environment.NewLine);
-            TxtMessageHistory.AppendText("messageInterface: b'\xe" + mh.MessageInterface + "'" + Environment.NewLine);
-            TxtMessageHistory.AppendText("messagePortNum: " + mh.PortNumber + Environment.NewLine);
-            TxtMessageHistory.AppendText("messageByteCount: " + mh.MessageByteCount + Environment.NewLine);
-            TxtMessageHistory.AppendText("--------------------------------------------------" + Environment.NewLine);
-
-            TxtMessageHistory.Invoke(new Action(() =>
-            {
-                TxtMessageHistory.AppendText(message + Environment.NewLine);
-            }));
-
-
-
-        }
-        private void textBox2_TextChanged(object sender, EventArgs e)
-        {
-            
-        }
         
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            LoadDataFromExcel();
             txtMessages.Text += $"0x11 -> 1.Mesaj {Environment.NewLine}";
             txtMessages.Text += $"0x12 -> 2.Mesaj {Environment.NewLine}";
             txtMessages.Text += $"0x13 -> 3.Mesaj {Environment.NewLine}";
@@ -103,70 +74,122 @@ namespace UDPClient
             btnUpdate.Enabled = false;
 
         }
-
-        private void txtMessageHistory_TextChanged(object sender, EventArgs e)
+        private void LoadDataFromExcel()
         {
-            string firstMessage = txtMessageHistory.Text;
-            firstMessage = $"A Message from Server: Hello";
-        }
-
-        private void btnConnect_Click(object sender, EventArgs e)
-        {
-
-            string ipAdressText = txtIP.Text;
-
-            
             try
             {
-                s.Connect(new IPEndPoint(IPAddress.Parse(ipAdressText), PORT));
-                txtMessageHistory.Text += $"Servera Bağlanıldı: " + ipAdressText  + Environment.NewLine;
-                txtMessageHistory.Text += $"Serverdan gelen mesaj: Serverdan Merhaba{Environment.NewLine}";
-                txtColor.BackColor = Color.Green;
-                btnUpdate.Enabled = true;
+                DataTable dataTable = new DataTable();
+                dataTable.Columns.Add("IP Address", typeof(string));
+                dataTable.Columns.Add("Port", typeof(int));
 
+                dataTable.Rows.Add("192.0.0.0", 55);
+                dataTable.Rows.Add("192.0.0.1", 56);
+                dataTable.Rows.Add("192.0.0.2", 57);
+
+                ipPortList = dataTable.AsEnumerable().Select(row => new IpPortData
+                {
+                    IpAddress = row.Field<string>("IP Address"),
+                    Port = row.Field<int>("Port")
+                }).ToList();
                 
+
             }
             catch (Exception ex)
             {
 
+            }
+        }
+
+        private bool IsValidIpAndPort(string ip, int port)
+        {
+            return ipPortList.Any(item => item.IpAddress == ip && item.Port == port);
+        }
+
+        private string previousIP = "";
+        private void btnConnect_Click(object sender, EventArgs e)
+        {
+            string enteredIp = txtIP.Text;
+            int enteredPort;
+            //////////
+            /*
+            if (!int.TryParse(txtPort.Text, out enteredPort))
+            {
+                MessageBox.Show("Invalid port number. Please enter a valid integer.");
+                txtColor.BackColor = Color.Red;
+                return;
+            }
+
+            // Girilen IP adresinin ve portunun doğruluğunu kontrol et
+            if (IsValidIpAndPort(enteredIp, enteredPort))
+            {
+                // Başarılı bir şekilde eşleştiğinde buraya gelecek
+                txtMessageHistory.Text += $"Connected: {enteredIp}:{enteredPort}{Environment.NewLine}";
+                txtColor.BackColor = Color.Green;
+            }
+            else
+            {
+                MessageBox.Show("IP address and port do not match any valid entry in the Excel list.");
+                txtColor.BackColor = Color.Red;
+            }
+            */
+
+            string ipAdressText = txtIP.Text;
+            try
+            {
+                if (!int.TryParse(txtPort.Text, out enteredPort))
+                {
+                    MessageBox.Show("Invalid port number. Please enter a valid integer.");
+                    txtColor.BackColor = Color.Red;
+                    return;
+                }
+                s.Connect(new IPEndPoint(IPAddress.Parse(ipAdressText), PORT));
+                if (IsValidIpAndPort(enteredIp, enteredPort))
+                {
+                    // Başarılı bir şekilde eşleştiğinde buraya gelecek
+                    //txtMessageHistory.Text += $"Connected: {enteredIp}:{enteredPort}{Environment.NewLine}";
+                    txtMessageHistory.Text += $"Servera Bağlanıldı: " + ipAdressText + "/" + txtPort.Text + Environment.NewLine;
+                    txtMessageHistory.Text += $"Serverdan gelen mesaj: Serverdan Merhaba{Environment.NewLine}";
+                    txtColor.BackColor = Color.Green;
+                }
+                /*
+                txtMessageHistory.Text += $"Servera Bağlanıldı: " + ipAdressText  + "/" + txtPort.Text +  Environment.NewLine;
+                txtMessageHistory.Text += $"Serverdan gelen mesaj: Serverdan Merhaba{Environment.NewLine}";
+                */
+
+                string currentIP = txtIP.Text.Trim();
+                if (currentIP != previousIP)
+                {
+                    txtMessageHistory.AppendText($"Disconnected: {previousIP}{Environment.NewLine}");
+                    txtMessageHistory.AppendText($"Connected: {currentIP}{Environment.NewLine}");
+
+                    // Update the previousIP variable with the current IP for the next comparison
+                    previousIP = currentIP;
+                };
+
+                //txtColor.BackColor = Color.Green;
+                btnUpdate.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show("IP address and port do not match any valid entry in the Excel list.");
+                txtMessageHistory.Text = $"Error {Environment.NewLine}" + ex.Message;
+                txtColor.BackColor = Color.Red;
+                
+                /*
                 txtMessageHistory.Text = $"Error {Environment.NewLine}" +ex.Message;
                 txtColor.BackColor = Color.Red;
+                */
 
                 if (!isConnected)
                 {
                     txtMessageHistory.Text += $"{Environment.NewLine}Try Again {Environment.NewLine}";
                     txtMessageHistory.Text += $"-----------------------------------------------------------";
                 }
-
-
-
-
             }
         }
-
-        private async Task SimulateDelayAndStartListening()
-        {
-            // Get the delay value from the txtDelay TextBox
-            int delayMilliseconds;
-            if (!int.TryParse(txtDelay.Text, out delayMilliseconds))
-            {
-                //MessageBox.Show("Invalid delay value. Please enter a valid integer.");
-                return;
-            }
-
-            // Simulate the delay using Task.Delay
-            await Task.Delay(delayMilliseconds);
-
-            // Start the UDP server to listen for messages
-            udpServer.StartListening();
-        }
-
         private void btnUpdate_Click(object sender, EventArgs e)
         {
             btnSaveMessage.Enabled = true;
-
-            //await SimulateDelayAndStartListening();
-
             string answer = cmbAnswer.SelectedItem.ToString();
             string delay = txtDelay.Text;
 
@@ -198,13 +221,20 @@ namespace UDPClient
             byte[] data2 = Encoding.UTF8.GetBytes(delay);
 
 
-
+            //Thread.Sleep(txtDelay.Text * 1000); Temel şey
+            int delayMilliseconds;
+            if (int.TryParse(txtDelay.Text, out delayMilliseconds))
+            {
+                Thread.Sleep(delayMilliseconds * 1000);
+            }
+            
             try
             {
                 s.Send(data);
 
                 if (cmbAnswer.SelectedItem.ToString() == "0x11")
                 {
+                    
                     txtMessageHistory.Text += $"------------Clientten Gönderilen Mesaj------------{Environment.NewLine}";
                     txtMessageHistory.Text += $"messageID: b'\'x{cmbAnswer.SelectedItem}'{Environment.NewLine}";
                     txtMessageHistory.Text += $"messageInterface:b'\xc{txtDelay.Text}'{Environment.NewLine}";
@@ -212,6 +242,9 @@ namespace UDPClient
                     txtMessageHistory.Text += $"messageByteCount: {mh.MessageByteCount}{Environment.NewLine}";
                     txtMessageHistory.Text += $"dataBytes: b'1.Mesaj' {Environment.NewLine}";
                     txtMessageHistory.Text += $"--------------------------------------------------{Environment.NewLine}";
+
+
+                    udpServer.AppendMessageToHistory();
                 }
 
             }
@@ -219,10 +252,8 @@ namespace UDPClient
             {
                 txtMessageHistory.Text += $"Error: {ex.Message}{Environment.NewLine}";
             }
-            
-
         }
-
+        
         private void btnSaveMessage_Click(object sender, EventArgs e)
         {
             string not = txtMessageHistory.Text;
