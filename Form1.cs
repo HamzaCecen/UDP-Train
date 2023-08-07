@@ -110,29 +110,7 @@ namespace UDPClient
         {
             string enteredIp = txtIP.Text;
             int enteredPort;
-            //////////
-            /*
-            if (!int.TryParse(txtPort.Text, out enteredPort))
-            {
-                MessageBox.Show("Invalid port number. Please enter a valid integer.");
-                txtColor.BackColor = Color.Red;
-                return;
-            }
-
-            // Girilen IP adresinin ve portunun doğruluğunu kontrol et
-            if (IsValidIpAndPort(enteredIp, enteredPort))
-            {
-                // Başarılı bir şekilde eşleştiğinde buraya gelecek
-                txtMessageHistory.Text += $"Connected: {enteredIp}:{enteredPort}{Environment.NewLine}";
-                txtColor.BackColor = Color.Green;
-            }
-            else
-            {
-                MessageBox.Show("IP address and port do not match any valid entry in the Excel list.");
-                txtColor.BackColor = Color.Red;
-            }
-            */
-
+            
             string ipAdressText = txtIP.Text;
             try
             {
